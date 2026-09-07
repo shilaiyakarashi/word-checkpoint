@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>パスワード関所</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --glass-deep:#1b3328;
+    --glass-mid:#24493a;
+    --leaf:#4f8a63;
+    --leaf-bright:#7cbf8e;
+    --soil:#efe7d8;
+    --paper:#faf6ec;
+    --amber:#c98a3d;
+    --amber-soft:#e3b876;
+    --rust:#a8502f;
+    --ink:#1e2a22;
+    --ok:#3c8a5b;
+    --ng:#a8502f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(124,191,142,.16), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(201,138,61,.14), transparent 40%),
+      linear-gradient(180deg, var(--glass-deep), var(--glass-mid) 60%, var(--glass-deep));
+    color:var(--ink);
+    font-family:"Noto Sans JP", sans-serif;
+    min-height:100vh;
+    padding:0 0 80px;
+  }
+  header{
+    padding:44px 20px 28px;
+    text-align:center;
+    color:var(--paper);
+  }
+  header h1{
+    font-family:"Shippori Mincho", serif;
+    font-weight:700;
+    font-size:clamp(28px,5vw,42px);
+    letter-spacing:.08em;
+    margin:0 0 10px;
+  }
+  header p{
+    max-width:560px;
+    margin:0 auto;
+    font-size:14px;
+    line-height:1.9;
+    color:#d9e8dd;
+  }
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 18px;
+  }
+  .panel{
+    background:var(--paper);
+    border-radius:4px;
+    padding:22px 22px 26px;
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    margin-bottom:22px;
+    border-top:3px solid var(--leaf);
+  }
+  .kotoba-field{
+    width:100%;
+    font-family:"Shippori Mincho", serif;
+    font-size:20px;
+    padding:14px 16px;
+    border:1px solid #cfc4a8;
+    border-radius:3px;
+    background:#fffdf6;
+    color:var(--ink);
+    line-height:1.6;
+    resize:vertical;
+    min-height:64px;
+  }
+  .kotoba-field:focus{outline:2px solid var(--leaf-bright); outline-offset:1px;}
+  .progress{
+    font-size:13px;
+    color:#d9e8dd;
+    text-align:center;
+    margin:6px 0 18px;
+    letter-spacing:.04em;
+  }
+  ol.rules{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  .rule{
+    display:flex;
+    gap:12px;
+    padding:13px 4px;
+    border-bottom:1px solid #ece2c9;
+    align-items:flex-start;
+    animation:leaf-in .35s ease both;
+  }
+  .rule:last-child{border-bottom:none;}
+  @keyframes leaf-in{
+    from{opacity:0; transform:translateY(6px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .rule .badge{
+    flex:0 0 22px;
+    height:22px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    margin-top:2px;
+    background:#e6ddc4;
+    color:#8a7c58;
+  }
+  .rule.pass .badge{background:var(--ok); color:#fff;}
+  .rule.fail .badge{background:#f1e2d6; color:var(--ng); border:1px solid var(--ng);}
+  .rule .text{font-size:14.5px; line-height:1.65;}
+  .rule .text .src{
+    display:block;
+    font-size:11.5px;
+    color:#8a7c58;
+    margin-top:3px;
+  }
+  .rule.dynamic .text::after{
+    content:"状態変化";
+    display:inline-block;
+    margin-left:8px;
+    font-size:10px;
+    background:var(--amber-soft);
+    color:#5a3d10;
+    padding:1px 6px;
+    border-radius:10px;
+    vertical-align:middle;
+  }
+  .captcha-tile{
+    display:inline-flex;
+    gap:4px;
+    background:#2c2418;
+    padding:9px 12px;
+    border-radius:4px;
+    margin:6px 0;
+  }
+  .captcha-tile span{
+    font-family:"Shippori Mincho", serif;
+    font-size:19px;
+    color:var(--amber-soft);
+    display:inline-block;
+  }
+  .captcha-tile span:nth-child(1){transform:rotate(-6deg);}
+  .captcha-tile span:nth-child(2){transform:rotate(4deg);}
+  .captcha-tile span:nth-child(3){transform:rotate(-3deg);}
+  .captcha-tile span:nth-child(4){transform:rotate(7deg);}
+  .final-trial{
+    margin-top:16px;
+    padding-top:16px;
+    border-top:2px dashed var(--leaf);
+  }
+  .final-trial input{
+    width:100%;
+    font-family:"Shippori Mincho", serif;
+    font-size:18px;
+    padding:10px 12px;
+    border:1px solid #cfc4a8;
+    border-radius:3px;
+    margin-top:8px;
+  }
+  .win-banner{
+    background:linear-gradient(135deg, var(--leaf), var(--leaf-bright));
+    color:#0e2016;
+    padding:18px 20px;
+    border-radius:4px;
+    font-weight:700;
+    text-align:center;
+    margin-top:14px;
+    display:none;
+  }
+  .win-banner.show{display:block;}
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:16px;
+  }
+  button{
+    font-family:"Noto Sans JP", sans-serif;
+    font-size:13.5px;
+    background:var(--amber);
+    color:#2c1c08;
+    border:none;
+    padding:9px 16px;
+    border-radius:3px;
+    cursor:pointer;
+    font-weight:700;
+  }
+  button.secondary{
+    background:transparent;
+    border:1px solid var(--paper);
+    color:var(--paper);
+  }
+  button:hover{filter:brightness(1.06);}
+  .status-line{
+    font-size:12px;
+    color:#8a7c58;
+    margin-top:8px;
+    min-height:16px;
+  }
+  .status-line.err{color:var(--ng);}
+  footer{
+    text-align:center;
+    color:#a9bdae;
+    font-size:11.5px;
+    margin-top:30px;
+    padding:0 20px;
+  }
+  .share-box{
+    background:#f0ead9;
+    border:1px dashed #cfc4a8;
+    padding:10px 12px;
+    border-radius:3px;
+    font-size:12.5px;
+    word-break:break-all;
+    margin-top:8px;
+    display:none;
+  }
+  .share-box.show{display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>パスワード関所</h1>
+  <p>ここは、通ろうとするたびに新たな詮議が加わる「パスワード関所」です。条件は一つずつ申し渡され、後から出てきた条件が前の答えを覆すことがあります。焦らず、末尾の調整領域を使って手形を整えてください。</p>
+</header>
+
+<main>
+  <div class="panel">
+    <label for="kotoba" style="font-size:13px;color:#5a5346;display:block;margin-bottom:6px;">詮議中の合言葉</label>
+    <textarea id="kotoba" class="kotoba-field" placeholder="ここに合言葉を入力してください…" autocomplete="off" spellcheck="false"></textarea>
+  </div>
+
+  <div class="progress" id="progressLine">条件を読み込み中…</div>
+
+  <div class="panel">
+    <ol class="rules" id="rulesList"></ol>
+
+    <div class="final-trial" id="finalTrial" style="display:none;">
+      <div style="font-size:14px; font-weight:700;">最終試練 — 完成した合言葉をもう一度</div>
+      <div style="font-size:12.5px; color:#5a5346; margin-top:4px;">上のすべての条件を満たした状態の合言葉を、下にもう一度正確に入力してください。</div>
+      <input id="finalInput" autocomplete="off" spellcheck="false">
+      <div class="status-line" id="finalStatus"></div>
+    </div>
+
+    <div class="win-banner" id="winBanner">⛩️ 関所を突破しました。合言葉が受理されました。 ⛩️</div>
+  </div>
+
+  <div class="panel">
+    <div style="font-size:13px; font-weight:700; margin-bottom:6px;">この挑戦を友達に送る</div>
+    <div style="font-size:12.5px; color:#5a5346; line-height:1.7;">
+      共有すると、CAPTCHA・気温・月相・時刻・曜日・和風月名・Wikidataの照合結果を「その瞬間のスナップショット」として固定した招待URLを作ります。開いた人は、あなたと全く同じ32条件・同じ答えに挑みます。
+    </div>
+    <div class="toolbar">
+      <button id="shareBtn">挑戦URLを作る</button>
+      <button class="secondary" id="copyBtn" style="display:none;">URLをコピー</button>
+    </div>
+    <div class="share-box" id="shareBox"></div>
+    <div class="status-line" id="fileNote"></div>
+  </div>
+</main>
+
+<footer>
+  「パスワード関所」は独自ルールのオリジナル作品です。似た系統の他作品の名称・文章・素材・ソースコードは一切使用していません。<br>
+  部首・画数の判定は本作専用の簡易辞典に基づきます（辞典外の漢字は判定対象外として扱われます）。
+</footer>
+
+<script>
+(function(){
+
+/* ---------------------------------------------------------
+   0. 内蔵字典（部首・画数）— このゲーム専用の簡易辞典
+--------------------------------------------------------- */
+const KANJI_DICT = {
+  // --- 基礎・低画数 ---
+  "水":{r:null,s:4}, "山":{r:null,s:3}, "川":{r:null,s:3}, "花":{r:null,s:7},
+  "字":{r:null,s:6}, "星":{r:null,s:9}, "風":{r:null,s:9}, "空":{r:null,s:8},
+  "光":{r:null,s:6}, "月":{r:null,s:4}, "火":{r:null,s:4}, "土":{r:null,s:3},
+  "木":{r:null,s:4}, "金":{r:null,s:8}, "日":{r:null,s:4}, "年":{r:null,s:6},
+  "分":{r:null,s:4}, "本":{r:null,s:5}, "中":{r:null,s:4}, "上":{r:null,s:3},
+  "下":{r:null,s:3}, "人":{r:null,s:2}, "大":{r:null,s:3}, "小":{r:null,s:3},
+  "虹":{r:null,s:9}, "草":{r:null,s:9}, "泉":{r:null,s:9}, "東":{r:null,s:8},
+  "京":{r:null,s:8}, "室":{r:null,s:9}, "温":{r:"氵",s:12}, "恋":{r:null,s:10},
+  // --- 部首「氵」（さんずい） ---
+  "河":{r:"氵",s:8}, "法":{r:"氵",s:8}, "波":{r:"氵",s:8}, "油":{r:"氵",s:8},
+  "泳":{r:"氵",s:8}, "沖":{r:"氵",s:7}, "沿":{r:"氵",s:8}, "泊":{r:"氵",s:8},
+  "注":{r:"氵",s:8}, "泣":{r:"氵",s:8}, "治":{r:"氵",s:8}, "沼":{r:"氵",s:8},
+  "池":{r:"氵",s:6}, "江":{r:"氵",s:6}, "決":{r:"氵",s:7}, "況":{r:"氵",s:8},
+  "浅":{r:"氵",s:9}, "海":{r:"氵",s:9}, "湾":{r:"氵",s:12},
+  "流":{r:"氵",s:10}, "浮":{r:"氵",s:10}, "浴":{r:"氵",s:10}, "消":{r:"氵",s:10},
+  "涙":{r:"氵",s:10}, "清":{r:"氵",s:11}, "深":{r:"氵",s:11}, "混":{r:"氵",s:11},
+  "済":{r:"氵",s:11}, "液":{r:"氵",s:11}, "減":{r:"氵",s:12}, "測":{r:"氵",s:12},
+  "港":{r:"氵",s:12}, "湖":{r:"氵",s:12}, "湯":{r:"氵",s:12}, "満":{r:"氵",s:12},
+  "源":{r:"氵",s:13}, "漢":{r:"氵",s:13}, "演":{r:"氵",s:14}, "激":{r:"氵",s:16},
+  "濃":{r:"氵",s:16},
+  // --- 10画 ---
+  "校":{r:null,s:10}, "通":{r:null,s:10}, "馬":{r:null,s:10}, "員":{r:null,s:10},
+  "院":{r:null,s:10}, "起":{r:null,s:10}, "宮":{r:null,s:10}, "庫":{r:null,s:10},
+  "根":{r:null,s:10}, "真":{r:null,s:10}, "息":{r:null,s:10}, "速":{r:null,s:10},
+  "庭":{r:null,s:10}, "配":{r:null,s:10}, "倍":{r:null,s:10}, "病":{r:null,s:10},
+  "勉":{r:null,s:10}, "旅":{r:null,s:10}, "案":{r:null,s:10}, "害":{r:null,s:10},
+  "挙":{r:null,s:10}, "訓":{r:null,s:10}, "候":{r:null,s:10}, "差":{r:null,s:10},
+  "残":{r:null,s:10}, "借":{r:null,s:10}, "笑":{r:null,s:10}, "席":{r:null,s:10},
+  "倉":{r:null,s:10}, "帯":{r:null,s:10}, "徒":{r:null,s:10}, "特":{r:null,s:10},
+  "料":{r:null,s:10}, "連":{r:null,s:10}, "個":{r:null,s:10}, "耕":{r:null,s:10},
+  "航":{r:null,s:10}, "財":{r:null,s:10}, "殺":{r:null,s:10}, "師":{r:null,s:10},
+  "修":{r:null,s:10}, "素":{r:null,s:10}, "造":{r:null,s:10}, "能":{r:null,s:10},
+  "破":{r:null,s:10}, "粉":{r:null,s:10}, "脈":{r:null,s:10}, "容":{r:null,s:10},
+  "留":{r:null,s:10}, "恩":{r:null,s:10}, "株":{r:null,s:10}, "胸":{r:null,s:10},
+  "降":{r:null,s:10}, "骨":{r:null,s:10}, "座":{r:null,s:10}, "従":{r:null,s:10},
+  "純":{r:null,s:10}, "除":{r:null,s:10}, "将":{r:null,s:10}, "針":{r:null,s:10},
+  "値":{r:null,s:10}, "展":{r:null,s:10}, "討":{r:null,s:10}, "党":{r:null,s:10},
+  "納":{r:null,s:10}, "俳":{r:null,s:10}, "班":{r:null,s:10}, "秘":{r:null,s:10},
+  "俵":{r:null,s:10}, "陛":{r:null,s:10}, "朗":{r:null,s:10}, "弱":{r:null,s:10},
+  "時":{r:null,s:10},
+  // --- 11画 ---
+  "強":{r:null,s:11}, "黄":{r:null,s:11}, "黒":{r:null,s:11}, "細":{r:null,s:11},
+  "週":{r:null,s:11}, "雪":{r:null,s:11}, "船":{r:null,s:11}, "組":{r:null,s:11},
+  "鳥":{r:null,s:11}, "野":{r:null,s:11}, "悪":{r:null,s:11}, "祭":{r:null,s:11},
+  "終":{r:null,s:11}, "習":{r:null,s:11}, "宿":{r:null,s:11}, "商":{r:null,s:11},
+  "章":{r:null,s:11}, "進":{r:null,s:11}, "族":{r:null,s:11}, "第":{r:null,s:11},
+  "転":{r:null,s:11}, "都":{r:null,s:11}, "動":{r:null,s:11}, "部":{r:null,s:11},
+  "問":{r:null,s:11}, "健":{r:null,s:11}, "康":{r:null,s:11}, "産":{r:null,s:11},
+  "唱":{r:null,s:11}, "移":{r:null,s:11}, "眼":{r:null,s:11}, "基":{r:null,s:11},
+  "寄":{r:null,s:11}, "規":{r:null,s:11}, "救":{r:null,s:11}, "許":{r:null,s:11},
+  "経":{r:null,s:11}, "険":{r:null,s:11}, "採":{r:null,s:11}, "授":{r:null,s:11},
+  "術":{r:null,s:11}, "常":{r:null,s:11}, "情":{r:null,s:11}, "責":{r:null,s:11},
+  "接":{r:null,s:11}, "設":{r:null,s:11}, "断":{r:null,s:11}, "張":{r:null,s:11},
+  "停":{r:null,s:11}, "得":{r:null,s:11}, "婦":{r:null,s:11}, "務":{r:null,s:11},
+  "略":{r:null,s:11}, "異":{r:null,s:11}, "域":{r:null,s:11}, "視":{r:null,s:11},
+  "探":{r:null,s:11}, "頂":{r:null,s:11}, "訪":{r:null,s:11}, "密":{r:null,s:11},
+  "訳":{r:null,s:11}, "郵":{r:null,s:11}, "欲":{r:null,s:11}, "球":{r:null,s:11},
+  // --- 12画 ---
+  "森":{r:null,s:12}, "間":{r:null,s:12}, "場":{r:null,s:12}, "晴":{r:null,s:12},
+  "朝":{r:null,s:12}, "答":{r:null,s:12}, "道":{r:null,s:12}, "買":{r:null,s:12},
+  "番":{r:null,s:12}, "飲":{r:null,s:12}, "運":{r:null,s:12}, "開":{r:null,s:12},
+  "階":{r:null,s:12}, "寒":{r:null,s:12}, "期":{r:null,s:12}, "軽":{r:null,s:12},
+  "歯":{r:null,s:12}, "集":{r:null,s:12}, "暑":{r:null,s:12}, "勝":{r:null,s:12},
+  "植":{r:null,s:12}, "短":{r:null,s:12}, "着":{r:null,s:12}, "登":{r:null,s:12},
+  "等":{r:null,s:12}, "童":{r:null,s:12}, "悲":{r:null,s:12}, "筆":{r:null,s:12},
+  "遊":{r:null,s:12}, "葉":{r:null,s:12}, "陽":{r:null,s:12}, "落":{r:null,s:12},
+  "街":{r:null,s:12}, "覚":{r:null,s:12}, "給":{r:null,s:12}, "極":{r:null,s:12},
+  "景":{r:null,s:12}, "結":{r:null,s:12}, "散":{r:null,s:12}, "焼":{r:null,s:12},
+  "然":{r:null,s:12}, "隊":{r:null,s:12}, "達":{r:null,s:12}, "博":{r:null,s:12},
+  "飯":{r:null,s:12}, "富":{r:null,s:12}, "無":{r:null,s:12}, "量":{r:null,s:12},
+  "営":{r:null,s:12}, "過":{r:null,s:12}, "賀":{r:null,s:12}, "緑":{r:null,s:14},
+  // --- 13画 ---
+  "愛":{r:null,s:13}, "楽":{r:null,s:13}, "夢":{r:null,s:13}, "数":{r:null,s:13},
+  "話":{r:null,s:13}, "詩":{r:null,s:13}, "新":{r:null,s:13}, "節":{r:null,s:13},
+  "続":{r:null,s:13}, "鉄":{r:null,s:13}, "辞":{r:null,s:13}, "勢":{r:null,s:13},
+  "園":{r:null,s:13}, "義":{r:null,s:13}, "群":{r:null,s:13}, "豊":{r:null,s:13},
+  "賃":{r:null,s:13},
+  // --- 14画 ---
+  "関":{r:null,s:14}, "静":{r:null,s:14}, "様":{r:null,s:14}, "認":{r:null,s:14},
+  "誤":{r:null,s:14}, "聞":{r:null,s:14}, "語":{r:null,s:14}, "雑":{r:null,s:14},
+  "増":{r:null,s:14}, "層":{r:null,s:14}, "像":{r:null,s:14}, "適":{r:null,s:14},
+  "態":{r:null,s:14}, "種":{r:null,s:14},
+  // --- 16画 ---
+  "薬":{r:null,s:16}, "親":{r:null,s:16}, "館":{r:null,s:16}, "積":{r:null,s:16},
+  "操":{r:null,s:16}, "築":{r:null,s:16}, "興":{r:null,s:16},
+  // --- 18画 ---
+  "難":{r:null,s:18}, "曜":{r:null,s:18}, "題":{r:null,s:18}, "顔":{r:null,s:18},
+  "類":{r:null,s:18}, "験":{r:null,s:18}, "職":{r:null,s:18}
+};
+
+/* ---------------------------------------------------------
+   1. 和風月名・曜日
+--------------------------------------------------------- */
+const PREFECTURES = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県",
+  "埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県",
+  "岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県",
+  "鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県",
+  "佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"
+];
+const WAFUU_MONTHS = ["睦月","如月","弥生","卯月","皐月","水無月","文月","葉月","長月","神無月","霜月","師走"];
+const WEEKDAY_KANJI = ["日","月","火","水","木","金","土"];
+const MOON_EMOJI = ["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"];
+const KANJI_DIGIT = {"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9};
+const KANJI_UNIT = {"十":10,"百":100,"千":1000};
+
+function jstParts(date){
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone:"Asia/Tokyo", hour:"numeric", hour12:false,
+    month:"numeric", weekday:"short"
+  });
+  const parts = fmt.formatToParts(date);
+  const get = t => parts.find(p=>p.type===t).value;
+  let hour = parseInt(get("hour"),10);
+  if(hour===24) hour = 0;
+  const month = parseInt(get("month"),10);
+  const weekdayShort = get("weekday"); // "Sun","Mon",...
+  const map = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  return { hour, month, weekdayIndex: map[weekdayShort] };
+}
+
+function numberToKanji(n){
+  if(n===0) return "〇";
+  let man = Math.floor(n/10000), rest = n%10000;
+  let out = "";
+  function fourDigit(x){
+    let s = "";
+    let sen = Math.floor(x/1000), hyaku = Math.floor((x%1000)/100), juu = Math.floor((x%100)/10), ichi = x%10;
+    if(sen) s += (sen>1? KANJI_DIGIT_REV(sen):"") + "千";
+    if(hyaku) s += (hyaku>1? KANJI_DIGIT_REV(hyaku):"") + "百";
+    if(juu) s += (juu>1? KANJI_DIGIT_REV(juu):"") + "十";
+    if(ichi) s += KANJI_DIGIT_REV(ichi);
+    return s;
+  }
+  function KANJI_DIGIT_REV(d){ return Object.keys(KANJI_DIGIT).find(k=>KANJI_DIGIT[k]===d); }
+  if(man) out += fourDigit(man) + "万";
+  out += fourDigit(rest);
+  return out || "〇";
+}
+
+function kanjiRunToNumber(s){
+  let result=0, section=0, num=0;
+  for(const ch of s){
+    if(KANJI_DIGIT[ch]!==undefined){ num = KANJI_DIGIT[ch]; }
+    else if(KANJI_UNIT[ch]!==undefined){ section += (num||1)*KANJI_UNIT[ch]; num=0; }
+    else if(ch==="万"){ section+=num; result += (section||1)*10000; section=0; num=0; }
+  }
+  section += num;
+  result += section;
+  return result;
+}
+function sumKanjiNumerals(text){
+  const runs = text.match(/[一二三四五六七八九十百千万]+/g) || [];
+  return runs.reduce((acc,r)=>acc+kanjiRunToNumber(r),0);
+}
+
+function isPrime(n){
+  if(n<2) return false;
+  for(let i=2;i*i<=n;i++){ if(n%i===0) return false; }
+  return true;
+}
+
+/* ---------------------------------------------------------
+   2. 月相の計算（既知の新月を基準にした簡易天文計算）
+--------------------------------------------------------- */
+function moonPhaseEmoji(date){
+  const knownNewMoon = Date.UTC(2000,0,6,18,14,0);
+  const synodic = 29.530588853;
+  const days = (date.getTime() - knownNewMoon) / 86400000;
+  let phase = (days % synodic) / synodic;
+  if(phase < 0) phase += 1;
+  const idx = Math.floor(phase*8 + 0.5) % 8;
+  return MOON_EMOJI[idx];
+}
+
+/* ---------------------------------------------------------
+   3. 挑戦コンテキスト（URL共有用スナップショット）
+--------------------------------------------------------- */
+function randomCaptcha(){
+  const letters = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let out = "";
+  for(let i=0;i<2;i++) out += letters[Math.floor(Math.random()*letters.length)];
+  for(let i=0;i<2;i++) out += "0123456789"[Math.floor(Math.random()*10)];
+  return out.split("").sort(()=>Math.random()-0.5).join("");
+}
+
+async function fetchTokyoTemp(){
+  try{
+    const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=35.6895&longitude=139.6917&current=temperature_2m&timezone=Asia%2FTokyo");
+    const data = await res.json();
+    return Math.round(data.current.temperature_2m);
+  }catch(e){ return null; }
+}
+
+async function fetchPrefectureLabel(name){
+  try{
+    const searchRes = await fetch("https://www.wikidata.org/w/api.php?action=wbsearchentities&search="
+      + encodeURIComponent(name) + "&language=ja&format=json&type=item&limit=1&origin=*");
+    const searchData = await searchRes.json();
+    const hit = searchData.search && searchData.search[0];
+    if(!hit) return null;
+    const entRes = await fetch("https://www.wikidata.org/w/api.php?action=wbgetentities&ids="
+      + hit.id + "&languages=ja&format=json&origin=*");
+    const entData = await entRes.json();
+    const label = entData.entities[hit.id].labels && entData.entities[hit.id].labels.ja
+      ? entData.entities[hit.id].labels.ja.value : null;
+    return label;
+  }catch(e){ return null; }
+}
+
+async function buildFreshContext(){
+  const now = new Date();
+  const { hour, month, weekdayIndex } = jstParts(now);
+  const prefName = PREFECTURES[Math.floor(Math.random()*PREFECTURES.length)];
+  const [temp, wikiLabel] = await Promise.all([fetchTokyoTemp(), fetchPrefectureLabel(prefName)]);
+  return {
+    captcha: randomCaptcha(),
+    hourKanji: numberToKanji(hour),
+    hourRaw: hour,
+    monthName: WAFUU_MONTHS[month-1],
+    weekdayKanji: WEEKDAY_KANJI[weekdayIndex],
+    moonEmoji: moonPhaseEmoji(now),
+    temp: (temp===null? 18 : temp),
+    tempIsFallback: temp===null,
+    prefName: prefName,
+    wikiLabel: (wikiLabel===null? prefName : wikiLabel),
+    wikiIsFallback: wikiLabel===null,
+    createdAt: now.toISOString()
+  };
+}
+
+function encodeContext(ctx){
+  const json = JSON.stringify(ctx);
+  return btoa(unescape(encodeURIComponent(json)))
+    .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function decodeContext(str){
+  try{
+    let b64 = str.replace(/-/g,"+").replace(/_/g,"/");
+    while(b64.length%4) b64 += "=";
+    const json = decodeURIComponent(escape(atob(b64)));
+    return JSON.parse(json);
+  }catch(e){ return null; }
+}
+
+/* ---------------------------------------------------------
+   4. ルール定義（32条）
+--------------------------------------------------------- */
+function buildRules(ctx){
+  const captchaDigitSum = ctx.captcha.split("").filter(c=>/[0-9]/.test(c))
+    .reduce((a,c)=>a+parseInt(c,10),0);
+
+  const hira = t => (t.match(/[\u3041-\u3096]/g)||[]);
+  const kata = t => (t.match(/[\u30A1-\u30FA]/g)||[]);
+  const kanjiChars = t => (t.match(/[\u4E00-\u9FFF]/g)||[]);
+  const digitsOf = t => (t.match(/[0-9]/g)||[]);
+
+  return [
+    { id:1, label:"合言葉は12文字以上にすること。",
+      src:"文字数はサロゲートペア（絵文字など）も1文字として数えます。",
+      check: t => Array.from(t).length>=12 },
+
+    { id:2, label:"ひらがなを1文字以上含めること。",
+      src:"判定範囲: ぁ〜ん（U+3041–U+3096）",
+      check: t => hira(t).length>0 },
+
+    { id:3, label:"カタカナを1文字以上含めること。",
+      src:"判定範囲: ァ〜ヺ（U+30A1–U+30FA）",
+      check: t => kata(t).length>0 },
+
+    { id:4, label:"漢字を1文字以上含めること。",
+      src:"判定範囲: 一〜龯（U+4E00–U+9FFF）",
+      check: t => kanjiChars(t).length>0 },
+
+    { id:5, label:"算用数字（0〜9）を1つ以上含めること。",
+      src:"半角数字のみを対象とします。",
+      check: t => digitsOf(t).length>0 },
+
+    { id:6, label:"読点「、」または句点「。」を1つ以上含めること。",
+      src:"全角の「、」「。」のみを対象とします。",
+      check: t => /[、。]/.test(t) },
+
+    { id:7, label:"含まれる算用数字をすべて足すと合計「23」になること。",
+      src:"半角数字1文字ずつの値を合計します。",
+      check: t => digitsOf(t).reduce((a,c)=>a+parseInt(c,10),0)===23 },
+
+    { id:8, label:"含まれる漢数字（一〜九、十、百、千、万）を位取りに従って合計すると「40」になること。",
+      src:"連続した漢数字のかたまりごとに位取り計算し、複数箇所あれば合算します。",
+      check: t => sumKanjiNumerals(t)===40 },
+
+    { id:9, label:"半角スペースを含めないこと。",
+      src:"半角スペース（U+0020）のみを対象とします。全角スペースは対象外です。",
+      check: t => !t.includes(" ") },
+
+    { id:10, label:"同じ文字を3回連続で使わないこと。",
+      src:"直前2文字と同一の文字が3つ続く箇所がないか調べます。",
+      check: t => !/(.)\1\1/u.test(t) },
+
+    { id:11, label:"合言葉全体の文字数が素数であること。",
+      src:"現在の文字数を素数判定します（1文字目のルールと矛盾しない範囲で調整してください）。",
+      check: t => isPrime(Array.from(t).length) },
+
+    { id:12, label:`この挑戦専用に選ばれた都道府県名「${ctx.prefName}」を含めること（Wikidataの日本語ラベルと照合済み: 「${ctx.wikiLabel}」）。`,
+      src: ctx.wikiIsFallback ? `Wikidataへの接続に失敗したため、既定値「${ctx.prefName}」で判定しています。` : `47都道府県から挑戦作成時にランダムで1つ選び、Wikidata（wbsearchentities→wbgetentities）で日本語ラベルを取得して答えとして固定しています。`,
+      check: t => t.includes(ctx.wikiLabel), dynamic:true },
+
+    { id:13, label:"部首「氵（さんずい）」を持つ漢字を1文字以上含めること。",
+      src:"本作専用の簡易辞典（本文末尾に一覧）で判定します。辞典外の漢字は対象外です。",
+      check: t => kanjiChars(t).some(k => KANJI_DICT[k] && KANJI_DICT[k].r==="氵") },
+
+    { id:14, label:"総画数10画以上の漢字を1文字以上含めること。",
+      src:"本作専用の簡易辞典に基づく画数判定です。",
+      check: t => kanjiChars(t).some(k => KANJI_DICT[k] && KANJI_DICT[k].s>=10) },
+
+    { id:15, label:`現在（JST基準・この挑戦のスナップショット）の和風月名「${ctx.monthName}」を含めること。`,
+      src:"睦月〜師走の和風月名。挑戦作成時点のJSTの月を使用。",
+      check: t => t.includes(ctx.monthName) },
+
+    { id:16, label:`現在（JST基準・スナップショット）の時（${ctx.hourRaw}時）を漢数字「${ctx.hourKanji}」で含めること。`,
+      src:"24時間表記の時をそのまま漢数字化。0時は「〇」。",
+      check: t => t.includes(ctx.hourKanji), dynamic:true },
+
+    { id:17, label:`挑戦作成時点の月相に対応する絵文字 ${ctx.moonEmoji} を含めること。`,
+      src:"既知の新月（2000-01-06 18:14 UTC）を基準にした簡易計算で8段階に分類。",
+      check: t => t.includes(ctx.moonEmoji), dynamic:true },
+
+    { id:18, label:`東京の挑戦作成時点の気温「${ctx.temp}」（℃、整数）を算用数字で含めること${ctx.tempIsFallback?"（API接続失敗のため既定値18を使用）":""}。`,
+      src:"Open-Meteo APIで取得した現在気温を四捨五入。",
+      check: t => t.includes(String(ctx.temp)), dynamic:true },
+
+    { id:19, label:"下に表示された照合札の4文字コードをそのまま含めること。",
+      src:"この挑戦専用に生成された固定コードです（大文字・小文字・数字を区別します）。",
+      check: t => t.includes(ctx.captcha) },
+
+    { id:20, label:`挑戦作成時点の曜日「${ctx.weekdayKanji}」を1文字含めること。`,
+      src:"JST基準の曜日をスナップショットとして固定。",
+      check: t => t.includes(ctx.weekdayKanji), dynamic:true },
+
+    { id:21, label:"テーマ語「温」または「室」のいずれかを含めること。",
+      src:"どちらか一方でも可。",
+      check: t => t.includes("温") || t.includes("室") },
+
+    { id:22, label:"ひらがなの母音「あ・い・う・え・お」のうち3種類以上を含めること。",
+      src:"清音のあ・い・う・え・おのみを対象とします（ぁ等の小書きは対象外）。",
+      check: t => new Set([..."あいうえお"].filter(v=>t.includes(v))).size>=3 },
+
+    { id:23, label:"カタカナの直後にひらがなが続く箇所を1つ以上作ること。",
+      src:"「カ→ぬ」のような並びを1箇所以上。",
+      check: t => /[\u30A1-\u30FA][\u3041-\u3096]/.test(t) },
+
+    { id:24, label:"濁点・半濁点付きの仮名（が・ぱ 等）を1文字以上含めること。",
+      src:"ひらがな・カタカナの濁音／半濁音を対象とします。",
+      check: t => /[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ]/.test(t) },
+
+    { id:25, label:"末尾6文字は自由な調整領域です。他の条件のつじつま合わせに自由に使ってかまいません（この領域そのものへの追加制約はありません）。",
+      src:"情報ルールです。常に満たされた扱いになります。",
+      check: () => true },
+
+    { id:26, label:"含まれる漢字の「異なり数」（同じ字を除いた種類数）が4種類以上であること。",
+      src:"同じ漢字を何度使っても1種類として数えます。",
+      check: t => new Set(kanjiChars(t)).size>=4 },
+
+    { id:27, label:"長音符「ー」を含めないこと。",
+      src:"全角の長音符（U+30FC）のみを対象とします。",
+      check: t => !t.includes("ー") },
+
+    { id:28, label:"同じ数字を2回連続で使わないこと（例：「11」は不可）。",
+      src:"隣り合う2文字が同一の数字である箇所がないか調べます。",
+      check: t => !/([0-9])\1/.test(t) },
+
+    { id:29, label:"ローマ字（半角アルファベットA-Z, a-z）を含めないこと。",
+      src:"照合札のコードは例外的に含めてよい第19条と両立するよう、他の位置での使用は避けてください。",
+      check: t => {
+        const withoutCaptcha = t.split(ctx.captcha).join("");
+        return !/[A-Za-z]/.test(withoutCaptcha);
+      } },
+
+    { id:30, label:"合言葉全体のうち、ひらがなが占める割合が50%以上であること。",
+      src:"（ひらがな文字数）÷（全体の文字数）で計算します。",
+      check: t => {
+        const total = Array.from(t).length;
+        if(total===0) return false;
+        return hira(t).length/total >= 0.5;
+      } },
+
+    { id:31, label:`照合札の4文字コードに含まれる数字の合計「${captchaDigitSum}」を、算用数字としてどこかに追記すること。`,
+      src:"第19条のコードと第7条の数字合計ルールに影響するため、末尾の調整領域の活用を推奨します。",
+      check: t => t.includes(String(captchaDigitSum)), dynamic:true },
+
+    { id:32, label:"最終試練：ここまでの全条件を満たした合言葉を、下の確認欄にもう一度正確に入力すること。",
+      src:"完全一致で判定します。",
+      check: () => true, isFinal:true }
+  ];
+}
+
+/* ---------------------------------------------------------
+   5. アプリ本体
+--------------------------------------------------------- */
+let CTX = null;
+let RULES = [];
+let revealCount = 1;
+let won = false;
+
+const kotobaEl = document.getElementById("kotoba");
+const rulesListEl = document.getElementById("rulesList");
+const progressEl = document.getElementById("progressLine");
+const finalTrialEl = document.getElementById("finalTrial");
+const finalInputEl = document.getElementById("finalInput");
+const finalStatusEl = document.getElementById("finalStatus");
+const winBannerEl = document.getElementById("winBanner");
+const shareBtn = document.getElementById("shareBtn");
+const copyBtn = document.getElementById("copyBtn");
+const shareBoxEl = document.getElementById("shareBox");
+const fileNoteEl = document.getElementById("fileNote");
+
+function checkableRules(){ return RULES.filter(r=>!r.isFinal); }
+
+function evaluate(){
+  const text = kotobaEl.value;
+  const visible = checkableRules().slice(0, revealCount);
+  let allPass = true;
+  rulesListEl.innerHTML = "";
+
+  visible.forEach(rule=>{
+    let pass = false;
+    try{ pass = !!rule.check(text); }catch(e){ pass=false; }
+    if(!pass) allPass = false;
+
+    const li = document.createElement("li");
+    li.className = "rule " + (pass?"pass":"fail") + (rule.dynamic?" dynamic":"");
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = pass ? "✓" : "・";
+    const textDiv = document.createElement("div");
+    textDiv.className = "text";
+    textDiv.innerHTML = `第${rule.id}条　${rule.label}<span class="src">${rule.src}</span>`;
+    li.appendChild(badge); li.appendChild(textDiv);
+    rulesListEl.appendChild(li);
+
+    if(rule.id===19){
+      const tile = document.createElement("div");
+      tile.className = "captcha-tile";
+      tile.innerHTML = CTX.captcha.split("").map(c=>`<span>${c}</span>`).join("");
+      textDiv.appendChild(tile);
+    }
+  });
+
+  const total = checkableRules().length;
+  progressEl.textContent = `${visible.length} / ${total} 条件を開放中 — 現在すべて満たしている: ${allPass ? "はい" : "いいえ"}`;
+
+  if(allPass && revealCount < total){
+    revealCount++;
+    return evaluate();
+  }
+
+  if(allPass && revealCount>=total){
+    finalTrialEl.style.display = "block";
+  } else {
+    finalTrialEl.style.display = "none";
+    winBannerEl.classList.remove("show");
+    won = false;
+  }
+
+}
+
+finalInputEl.addEventListener("input", ()=>{
+  const text = kotobaEl.value;
+  if(finalInputEl.value === text && text.length>0){
+    finalStatusEl.textContent = "一致しました。";
+    finalStatusEl.className = "status-line";
+    won = true;
+    winBannerEl.classList.add("show");
+  }else{
+    finalStatusEl.textContent = "まだ一致していません。";
+    finalStatusEl.className = "status-line err";
+    winBannerEl.classList.remove("show");
+    won = false;
+  }
+});
+
+kotobaEl.addEventListener("input", evaluate);
+
+/* ---------------------------------------------------------
+   6. 共有機能
+--------------------------------------------------------- */
+shareBtn.addEventListener("click", ()=>{
+  const encoded = encodeContext(CTX);
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.search = "?c=" + encoded;
+  const urlStr = url.toString();
+  shareBoxEl.textContent = urlStr;
+  shareBoxEl.classList.add("show");
+  copyBtn.style.display = "inline-block";
+
+  if(navigator.share){
+    navigator.share({ title:"パスワード関所 — 挑戦状", text:"32の条件を満たす合言葉で関所を突破してみてください。", url: urlStr })
+      .catch(()=>{ /* ユーザーがキャンセルした場合は何もしない */ });
+  }
+
+  if(window.location.protocol === "file:"){
+    fileNoteEl.textContent = "file:// で開いているため、このURLをそのまま送っても相手の環境では開けません。この index.html ファイル自体を送ってください。";
+  } else {
+    fileNoteEl.textContent = "";
+  }
+});
+
+copyBtn.addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText(shareBoxEl.textContent);
+    copyBtn.textContent = "コピーしました";
+    setTimeout(()=>{ copyBtn.textContent = "URLをコピー"; }, 1800);
+  }catch(e){
+    fileNoteEl.textContent = "クリップボードへのコピーに失敗しました。URLを手動で選択してコピーしてください。";
+  }
+});
+
+/* ---------------------------------------------------------
+   7. 起動処理
+--------------------------------------------------------- */
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const c = params.get("c");
+  let ctx = null;
+
+  if(c){
+    ctx = decodeContext(c);
+    if(!ctx){
+      progressEl.textContent = "招待URLの読み込みに失敗しました。新しい挑戦を生成します。";
+    }
+  }
+
+  if(!ctx){
+    progressEl.textContent = "新しい挑戦を準備しています（気温・Wikidataを取得中）…";
+    ctx = await buildFreshContext();
+  }
+
+  CTX = ctx;
+  RULES = buildRules(CTX);
+  revealCount = 1;
+  evaluate();
+
+  if(window.location.protocol === "file:"){
+    fileNoteEl.textContent = "ローカルファイルとして開いています。共有するときはこの index.html を送ってください。";
+  }
+}
+
+init();
+
+})();
+</script>
+</body>
+</html>
