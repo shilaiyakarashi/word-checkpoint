@@ -233,7 +233,7 @@
 
 <header>
   <h1>パスワード関所</h1>
-  <p>ここは、通ろうとするたびに新たな詮議が加わる「パスワード関所」です。条件は一つずつ申し渡され、後から出てきた条件が前の答えを覆すことがあります。焦らず、末尾の調整領域を使って手形を整えてください。</p>
+  <p>ようこそ、パスワード関所へ。合言葉を入力するたびに、新しい条件が少しずつ明らかになっていきます。あとから出てきた条件のせいで、それまで満たしていた答えが合わなくなることもありますが、焦らなくて大丈夫。末尾の調整領域を使って、うまく帳尻を合わせてください。</p>
 </header>
 
 <main>
@@ -273,7 +273,8 @@
 
 <footer>
   「パスワード関所」は独自ルールのオリジナル作品です。似た系統の他作品の名称・文章・素材・ソースコードは一切使用していません。<br>
-  部首・画数の判定は本作専用の簡易辞典に基づきます（辞典外の漢字は判定対象外として扱われます）。
+  部首・画数の判定は本作専用の簡易辞典に基づきます（辞典外の漢字は判定対象外として扱われます）。<br>
+  ご感想や不具合報告などは、X（<a href="https://x.com/shilaiyakarashi" target="_blank" rel="noopener" style="color:#c98a3d;">@shilaiyakarashi</a>）のDMまでお気軽にどうぞ。
 </footer>
 
 <script>
@@ -292,6 +293,15 @@ const KANJI_DICT = {
   "下":{r:null,s:3}, "人":{r:null,s:2}, "大":{r:null,s:3}, "小":{r:null,s:3},
   "虹":{r:null,s:9}, "草":{r:null,s:9}, "泉":{r:null,s:9}, "東":{r:null,s:8},
   "京":{r:null,s:8}, "室":{r:null,s:9}, "温":{r:"氵",s:12}, "恋":{r:null,s:10},
+  "所":{r:null,s:8},
+  // --- 5〜9画の一般漢字（追加分） ---
+  "冬":{r:null,s:5}, "央":{r:null,s:5}, "加":{r:null,s:5}, "功":{r:null,s:5},
+  "末":{r:null,s:5}, "会":{r:null,s:6}, "好":{r:null,s:6}, "存":{r:null,s:6},
+  "缶":{r:null,s:6}, "多":{r:null,s:6}, "医":{r:null,s:7}, "対":{r:null,s:7},
+  "局":{r:null,s:7}, "状":{r:null,s:7}, "私":{r:null,s:7}, "例":{r:null,s:8},
+  "命":{r:null,s:8}, "定":{r:null,s:8}, "実":{r:null,s:8}, "果":{r:null,s:8},
+  "城":{r:null,s:9}, "度":{r:null,s:9}, "発":{r:null,s:9}, "荷":{r:null,s:9},
+  "品":{r:null,s:9},
   // --- 部首「氵」（さんずい） ---
   "河":{r:"氵",s:8}, "法":{r:"氵",s:8}, "波":{r:"氵",s:8}, "油":{r:"氵",s:8},
   "泳":{r:"氵",s:8}, "沖":{r:"氵",s:7}, "沿":{r:"氵",s:8}, "泊":{r:"氵",s:8},
@@ -304,6 +314,12 @@ const KANJI_DICT = {
   "港":{r:"氵",s:12}, "湖":{r:"氵",s:12}, "湯":{r:"氵",s:12}, "満":{r:"氵",s:12},
   "源":{r:"氵",s:13}, "漢":{r:"氵",s:13}, "演":{r:"氵",s:14}, "激":{r:"氵",s:16},
   "濃":{r:"氵",s:16},
+  // --- 部首「氵」（さんずい）追加分 ---
+  "汁":{r:"氵",s:5}, "汗":{r:"氵",s:6}, "沙":{r:"氵",s:7}, "没":{r:"氵",s:7},
+  "沢":{r:"氵",s:7}, "汽":{r:"氵",s:7}, "泡":{r:"氵",s:8}, "泥":{r:"氵",s:8},
+  "泌":{r:"氵",s:9}, "渇":{r:"氵",s:11}, "渋":{r:"氵",s:11}, "渓":{r:"氵",s:11},
+  "渡":{r:"氵",s:12}, "湿":{r:"氵",s:12}, "滝":{r:"氵",s:13}, "滴":{r:"氵",s:14},
+  "漁":{r:"氵",s:14}, "漂":{r:"氵",s:14}, "潮":{r:"氵",s:15}, "澄":{r:"氵",s:15},
   // --- 10画 ---
   "校":{r:null,s:10}, "通":{r:null,s:10}, "馬":{r:null,s:10}, "員":{r:null,s:10},
   "院":{r:null,s:10}, "起":{r:null,s:10}, "宮":{r:null,s:10}, "庫":{r:null,s:10},
@@ -440,6 +456,10 @@ function sumKanjiNumerals(text){
   return runs.reduce((acc,r)=>acc+kanjiRunToNumber(r),0);
 }
 
+function randomInt(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
 function isPrime(n){
   if(n<2) return false;
   for(let i=2;i*i<=n;i++){ if(n%i===0) return false; }
@@ -511,6 +531,8 @@ async function buildFreshContext(){
     prefName: prefName,
     wikiLabel: (wikiLabel===null? prefName : wikiLabel),
     wikiIsFallback: wikiLabel===null,
+    digitSumTarget: randomInt(20,40),
+    kanjiSumTarget: [40,50,60][Math.floor(Math.random()*3)],
     createdAt: now.toISOString()
   };
 }
@@ -566,13 +588,13 @@ function buildRules(ctx){
       src:"全角の「、」「。」のみを対象とします。",
       check: t => /[、。]/.test(t) },
 
-    { id:7, label:"含まれる算用数字をすべて足すと合計「23」になること。",
-      src:"半角数字1文字ずつの値を合計します。",
-      check: t => digitsOf(t).reduce((a,c)=>a+parseInt(c,10),0)===23 },
+    { id:7, label:`含まれる算用数字をすべて足すと合計「${ctx.digitSumTarget}」になること。`,
+      src:"半角数字1文字ずつの値を合計します（この挑戦専用に20〜40の範囲からランダムに選ばれた目標値です）。",
+      check: t => digitsOf(t).reduce((a,c)=>a+parseInt(c,10),0)===ctx.digitSumTarget, dynamic:true },
 
-    { id:8, label:"含まれる漢数字（一〜九、十、百、千、万）を位取りに従って合計すると「40」になること。",
-      src:"連続した漢数字のかたまりごとに位取り計算し、複数箇所あれば合算します。",
-      check: t => sumKanjiNumerals(t)===40 },
+    { id:8, label:`含まれる漢数字（一〜九、十、百、千、万）を位取りに従って合計すると「${ctx.kanjiSumTarget}」になること。`,
+      src:"連続した漢数字のかたまりごとに位取り計算し、複数箇所あれば合算します（この挑戦専用に40・50・60のいずれかからランダムに選ばれた目標値です）。",
+      check: t => sumKanjiNumerals(t)===ctx.kanjiSumTarget, dynamic:true },
 
     { id:9, label:"半角スペースを含めないこと。",
       src:"半角スペース（U+0020）のみを対象とします。全角スペースは対象外です。",
@@ -622,9 +644,9 @@ function buildRules(ctx){
       src:"JST基準の曜日をスナップショットとして固定。",
       check: t => t.includes(ctx.weekdayKanji), dynamic:true },
 
-    { id:21, label:"テーマ語「温」または「室」のいずれかを含めること。",
-      src:"どちらか一方でも可。",
-      check: t => t.includes("温") || t.includes("室") },
+    { id:21, label:"テーマ語「関所」を含めること。",
+      src:"本作のタイトルにも使われる語です。",
+      check: t => t.includes("関所") },
 
     { id:22, label:"ひらがなの母音「あ・い・う・え・お」のうち3種類以上を含めること。",
       src:"清音のあ・い・う・え・おのみを対象とします（ぁ等の小書きは対象外）。",
