@@ -227,6 +227,46 @@
     display:none;
   }
   .share-box.show{display:block;}
+  .dict-box{
+    display:none;
+    margin-top:14px;
+  }
+  .dict-box.show{display:block;}
+  .dict-note{
+    font-size:12.5px;
+    color:#5a5346;
+    line-height:1.7;
+    margin-bottom:10px;
+  }
+  .dict-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
+    gap:6px;
+  }
+  .dict-item{
+    background:#f0ead9;
+    border:1px solid #e0d5b8;
+    border-radius:3px;
+    padding:6px 4px 5px;
+    text-align:center;
+  }
+  .dict-item .ch{
+    font-family:"Shippori Mincho", serif;
+    font-size:19px;
+    color:var(--ink);
+    display:block;
+  }
+  .dict-item .meta{
+    display:block;
+    font-size:10px;
+    color:#8a7c58;
+    margin-top:2px;
+  }
+  .dict-item.sansui{
+    border-color:var(--leaf);
+    background:#e7f1ea;
+  }
+  .dict-item.sansui .meta{color:var(--leaf);}
 </style>
 </head>
 <body>
@@ -268,6 +308,20 @@
     </div>
     <div class="share-box" id="shareBox"></div>
     <div class="status-line" id="fileNote"></div>
+  </div>
+
+  <div class="panel">
+    <div style="font-size:13px; font-weight:700; margin-bottom:6px;">本作専用の簡易辞典（部首・画数）</div>
+    <div style="font-size:12.5px; color:#5a5346; line-height:1.7;">
+      第13条・第14条の判定に使われている簡易辞典を確認できます。辞典外の漢字は判定対象外です。
+    </div>
+    <div class="toolbar">
+      <button id="dictToggleBtn">簡易辞典を表示</button>
+    </div>
+    <div class="dict-box" id="dictBox">
+      <div class="dict-note">緑枠は部首「氵（さんずい）」を持つ漢字です。各マスの下段は総画数です。</div>
+      <div class="dict-grid" id="dictGrid"></div>
+    </div>
   </div>
 </main>
 
@@ -720,6 +774,9 @@ const shareBtn = document.getElementById("shareBtn");
 const copyBtn = document.getElementById("copyBtn");
 const shareBoxEl = document.getElementById("shareBox");
 const fileNoteEl = document.getElementById("fileNote");
+const dictToggleBtn = document.getElementById("dictToggleBtn");
+const dictBoxEl = document.getElementById("dictBox");
+const dictGridEl = document.getElementById("dictGrid");
 
 function checkableRules(){ return RULES.filter(r=>!r.isFinal); }
 
@@ -787,6 +844,48 @@ finalInputEl.addEventListener("input", ()=>{
 });
 
 kotobaEl.addEventListener("input", evaluate);
+
+/* ---------------------------------------------------------
+   5b. 簡易辞典パネル
+--------------------------------------------------------- */
+let dictRendered = false;
+
+function renderDictionary(){
+  const chars = Object.keys(KANJI_DICT).sort((a,b)=>{
+    const sa = KANJI_DICT[a].s, sb = KANJI_DICT[b].s;
+    if(sa!==sb) return sa-sb;
+    return a.localeCompare(b, "ja");
+  });
+  const frag = document.createDocumentFragment();
+  chars.forEach(ch=>{
+    const info = KANJI_DICT[ch];
+    const item = document.createElement("div");
+    item.className = "dict-item" + (info.r==="氵" ? " sansui" : "");
+    const chSpan = document.createElement("span");
+    chSpan.className = "ch";
+    chSpan.textContent = ch;
+    const metaSpan = document.createElement("span");
+    metaSpan.className = "meta";
+    metaSpan.textContent = info.s + "画";
+    item.appendChild(chSpan);
+    item.appendChild(metaSpan);
+    frag.appendChild(item);
+  });
+  dictGridEl.appendChild(frag);
+  dictRendered = true;
+}
+
+dictToggleBtn.addEventListener("click", ()=>{
+  const showing = dictBoxEl.classList.contains("show");
+  if(showing){
+    dictBoxEl.classList.remove("show");
+    dictToggleBtn.textContent = "簡易辞典を表示";
+  }else{
+    if(!dictRendered) renderDictionary();
+    dictBoxEl.classList.add("show");
+    dictToggleBtn.textContent = "簡易辞典を閉じる";
+  }
+});
 
 /* ---------------------------------------------------------
    6. 共有機能
